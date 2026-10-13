@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "SalonGo",
+    "slug": "SalonGo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.anonymous.SalonGo"
+    },
+    "ios": {
+      "infoPlist": {
+        "NSCameraUsageDescription": "SalonGo uses your camera to add profile and salon photos.",
+        "NSLocationWhenInUseUsageDescription": "SalonGo uses your location to show salons near you."
+      }
+    }
+  }
+}

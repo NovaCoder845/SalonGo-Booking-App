@@ -1,0 +1,22 @@
+{
+  "app_name": "SalonGo",
+  "welcome_title": "Bienvenue sur SalonGo",
+  "login_subtitle": "Connectez-vous pour réserver ou gérer vos rendez-vous",
+  "email": "E-mail",
+  "password": "Mot de passe",
+  "log_in": "Se connecter",
+  "no_account": "Pas de compte ? Inscrivez-vous",
+  "signup_title": "Créez votre compte",
+  "signup_subtitle": "Vous réservez, ou vous gérez un salon ?",
+  "customer": "Client",
+  "salon_owner": "Propriétaire de salon",
+  "full_name": "Nom complet",
+  "create_account": "Créer un compte",
+  "missing_info_title": "Informations manquantes",
+  "missing_info_login": "Veuillez entrer votre e-mail et votre mot de passe.",
+  "missing_info_signup": "Veuillez remplir votre nom, e-mail et mot de passe.",
+  "weak_password_title": "Mot de passe faible",
+  "weak_password_message": "Le mot de passe doit contenir au moins 6 caractères.",
+  "login_error_title": "Connexion impossible",
+  "signup_error_title": "Impossible de créer le compte"
+}
