@@ -1,77 +1,54 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const TEXTS = {
+  en: {
+    title: 'Payment methods',
+    pay_title: 'Pay at the salon',
+    pay_text:
+      'You pay directly at the salon after your appointment. The price of each service is shown before you book, so there are no surprises.',
+    soon_title: 'Online payment: coming soon',
+    soon_text:
+      'Paying by card inside the app is planned for a future version. No card details are collected or stored today.',
+  },
+  fr: {
+    title: 'Moyens de paiement',
+    pay_title: 'Payer au salon',
+    pay_text:
+      "Vous payez directement au salon après votre rendez-vous. Le prix de chaque service est affiché avant la réservation, il n'y a donc pas de surprise.",
+    soon_title: 'Paiement en ligne : bientôt disponible',
+    soon_text:
+      "Le paiement par carte dans l'application est prévu pour une prochaine version. Aucune donnée de carte n'est collectée ni stockée aujourd'hui.",
+  },
+};
 
 export default function PaymentMethodsScreen({ navigation }) {
-  const [methods, setMethods] = useState([]);
-  const [adding, setAdding] = useState(false);
-  const [label, setLabel] = useState('');
-  const [last4, setLast4] = useState('');
-
-  const handleAdd = () => {
-    if (!label.trim() || last4.trim().length !== 4) return;
-    setMethods((prev) => [...prev, { id: Date.now().toString(), label: label.trim(), last4: last4.trim() }]);
-    setLabel('');
-    setLast4('');
-    setAdding(false);
-  };
+  const { i18n } = useTranslation();
+  const L = TEXTS[(i18n.language || 'en').startsWith('fr') ? 'fr' : 'en'];
 
   return (
     <View style={styles.screen}>
       <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
         <Ionicons name="chevron-back" size={24} color="#2C3E50" />
       </TouchableOpacity>
-      <Text style={styles.title}>Payment methods</Text>
+      <Text style={styles.title}>{L.title}</Text>
 
-      {methods.length === 0 && !adding && (
-        <View style={styles.empty}>
-          <Ionicons name="card-outline" size={40} color="#C9C7C0" />
-          <Text style={styles.emptyText}>No payment methods yet</Text>
+      <View style={styles.card}>
+        <View style={styles.iconCircle}>
+          <Ionicons name="cash-outline" size={28} color="#1D9E75" />
         </View>
-      )}
+        <Text style={styles.cardTitle}>{L.pay_title}</Text>
+        <Text style={styles.cardText}>{L.pay_text}</Text>
+      </View>
 
-      <FlatList
-        data={methods}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Ionicons name="card" size={22} color="#1D9E75" />
-            <View style={{ marginLeft: 12 }}>
-              <Text style={styles.cardLabel}>{item.label}</Text>
-              <Text style={styles.cardSub}>•••• {item.last4}</Text>
-            </View>
-          </View>
-        )}
-      />
-
-      {adding ? (
-        <View style={{ marginTop: 10 }}>
-          <TextInput style={styles.input} placeholder="Card nickname (e.g. Visa)" value={label} onChangeText={setLabel} />
-          <TextInput
-            style={styles.input}
-            placeholder="Last 4 digits"
-            value={last4}
-            onChangeText={setLast4}
-            keyboardType="number-pad"
-            maxLength={4}
-          />
-          <TouchableOpacity style={styles.saveButton} onPress={handleAdd}>
-            <Text style={styles.saveText}>Save card</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setAdding(false)}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+      <View style={styles.soon}>
+        <Ionicons name="card-outline" size={20} color="#888780" style={{ marginRight: 10 }} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.soonTitle}>{L.soon_title}</Text>
+          <Text style={styles.soonText}>{L.soon_text}</Text>
         </View>
-      ) : (
-        <TouchableOpacity style={styles.addButton} onPress={() => setAdding(true)}>
-          <Ionicons name="add" size={18} color="#D85A30" />
-          <Text style={styles.addText}>Add payment method</Text>
-        </TouchableOpacity>
-      )}
-
-      <Text style={styles.note}>
-        This stores a card nickname and last 4 digits locally for demo purposes only — it isn't connected to a real payment processor yet.
-      </Text>
+      </View>
     </View>
   );
 }
@@ -80,45 +57,26 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 60 },
   back: { marginBottom: 20 },
   title: { fontSize: 22, fontWeight: '700', color: '#2C3E50', marginBottom: 20 },
-  empty: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { color: '#888780', fontSize: 14, marginTop: 10 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF8F3',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardLabel: { fontSize: 15, fontWeight: '600', color: '#2C3E50' },
-  cardSub: { fontSize: 13, color: '#888780', marginTop: 2 },
-  addButton: {
-    flexDirection: 'row',
+  card: { backgroundColor: '#E9F6F1', borderRadius: 16, padding: 20, alignItems: 'center' },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#D85A30',
-    borderRadius: 10,
-    paddingVertical: 12,
-    marginTop: 10,
-  },
-  addText: { color: '#D85A30', fontWeight: '600', marginLeft: 6 },
-  saveButton: {
-    backgroundColor: '#D85A30',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  saveText: { color: '#fff', fontWeight: '600' },
-  cancelText: { color: '#888780', textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
     marginBottom: 12,
-    fontSize: 15,
   },
-  note: { fontSize: 12, color: '#C9C7C0', marginTop: 20, lineHeight: 18 },
+  cardTitle: { fontSize: 17, fontWeight: '700', color: '#2C3E50', marginBottom: 6 },
+  cardText: { fontSize: 14, color: '#2C3E50', textAlign: 'center', lineHeight: 20 },
+  soon: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F5F4F0',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 16,
+  },
+  soonTitle: { fontSize: 14, fontWeight: '600', color: '#2C3E50' },
+  soonText: { fontSize: 13, color: '#888780', marginTop: 2, lineHeight: 18 },
 });

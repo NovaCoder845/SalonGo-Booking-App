@@ -1,24 +1,75 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Calendar from 'expo-calendar';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import * as Calendar from 'expo-calendar/legacy';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth, db } from '../../firebaseConfig';
 import s from '../../styles';
+import { scheduleBookingReminders } from '../../utils/reminders';
 
+// English and French texts of this screen
+const TEXTS = {
+  en: {
+    title: 'Booking confirmed',
+    subtitle: "You're all set — here's your appointment summary",
+    date_at: (label, slot) => `${label} at ${slot}`,
+    reminders_two: 'Reminders set: 1 day and 1 hour before',
+    reminders_one: 'Reminder set before your appointment',
+    adding: 'Adding...',
+    add_to_calendar: 'Add to calendar',
+    view_appointments: 'View my appointments',
+    back_to_salons: 'Back to salons',
+    permission_needed: 'Permission needed',
+    permission_msg: 'Allow calendar access to add this appointment.',
+    event_title: (service, salon) => `${service} at ${salon}`,
+    event_notes: 'Booked via SalonGo',
+    added_title: 'Added to calendar',
+    added_msg: 'This appointment has been added to your calendar.',
+    calendar_error: 'Could not add to calendar',
+    calendar_error_msg: 'Something went wrong adding this event.',
+  },
+  fr: {
+    title: 'Réservation confirmée',
+    subtitle: 'Tout est prêt — voici le récapitulatif de votre rendez-vous',
+    date_at: (label, slot) => `${label} à ${slot}`,
+    reminders_two: 'Rappels activés : 1 jour et 1 heure avant',
+    reminders_one: 'Rappel activé avant votre rendez-vous',
+    adding: 'Ajout...',
+    add_to_calendar: 'Ajouter au calendrier',
+    view_appointments: 'Voir mes rendez-vous',
+    back_to_salons: 'Retour aux salons',
+    permission_needed: 'Autorisation nécessaire',
+    permission_msg: "Autorisez l'accès au calendrier pour ajouter ce rendez-vous.",
+    event_title: (service, salon) => `${service} chez ${salon}`,
+    event_notes: 'Réservé via SalonGo',
+    added_title: 'Ajouté au calendrier',
+    added_msg: 'Ce rendez-vous a été ajouté à votre calendrier.',
+    calendar_error: "Impossible d'ajouter au calendrier",
+    calendar_error_msg: "Un problème est survenu lors de l'ajout de cet événement.",
+  },
+};
+
+// The booking is saved on the Booking screen (together with the "slot taken"
+// marker), so this screen shows the result, sets reminders, and offers "Add to calendar".
 export default function ConfirmationScreen({ route, navigation }) {
+  const { i18n } = useTranslation();
+  const L = TEXTS[(i18n.language || 'en').startsWith('fr') ? 'fr' : 'en'];
+
   const { salon, service, slot, date } = route.params;
   const [addingToCalendar, setAddingToCalendar] = useState(false);
+  const [remindersSet, setRemindersSet] = useState(0);
 
-  // Save the booking when confirmation is shown so it survives app restarts.
+  // Schedule the reminders once when the screen opens
   useEffect(() => {
-    addDoc(collection(db, 'bookings'), {
-      customerId: auth.currentUser?.uid,
-      salon: salon.name,
-      service: service.name,
-      when: `${date.label}, ${slot}`,
-      createdAt: serverTimestamp(),
-    }).catch((e) => console.error('Failed to save booking', e));
+    (async () => {
+      const count = await scheduleBookingReminders({
+        salonId: salon.id,
+        salonName: salon.name,
+        serviceName: service.name,
+        dateIso: date.iso,
+        time: slot,
+      });
+      setRemindersSet(count);
+    })();
   }, []);
 
   const addToCalendar = async () => {
@@ -26,7 +77,7 @@ export default function ConfirmationScreen({ route, navigation }) {
     try {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Allow calendar access to add this appointment.');
+        Alert.alert(L.permission_needed, L.permission_msg);
         return;
       }
 
@@ -67,17 +118,17 @@ export default function ConfirmationScreen({ route, navigation }) {
       const end = new Date(start.getTime() + (service.durationMin || 30) * 60000);
 
       await Calendar.createEventAsync(calendarId, {
-        title: `${service.name} at ${salon.name}`,
+        title: L.event_title(service.name, salon.name),
         startDate: start,
         endDate: end,
         location: salon.area,
-        notes: 'Booked via SalonGo',
+        notes: L.event_notes,
       });
 
-      Alert.alert('Added to calendar', 'This appointment has been added to your calendar.');
+      Alert.alert(L.added_title, L.added_msg);
     } catch (e) {
       console.error('Calendar error', e);
-      Alert.alert('Could not add to calendar', e?.message || 'Something went wrong adding this event.');
+      Alert.alert(L.calendar_error, e?.message || L.calendar_error_msg);
     } finally {
       setAddingToCalendar(false);
     }
@@ -89,10 +140,8 @@ export default function ConfirmationScreen({ route, navigation }) {
         <Ionicons name="checkmark" size={40} color="#fff" />
       </View>
 
-      <Text style={[s.title, { textAlign: 'center' }]}>Booking confirmed</Text>
-      <Text style={[s.subtitle, { textAlign: 'center' }]}>
-        You're all set — here's your appointment summary
-      </Text>
+      <Text style={[s.title, { textAlign: 'center' }]}>{L.title}</Text>
+      <Text style={[s.subtitle, { textAlign: 'center' }]}>{L.subtitle}</Text>
 
       <View style={styles.summaryCard}>
         <View style={styles.row}>
@@ -105,26 +154,32 @@ export default function ConfirmationScreen({ route, navigation }) {
         </View>
         <View style={styles.row}>
           <Ionicons name="time-outline" size={16} color="#888780" style={styles.rowIcon} />
-          <Text style={styles.rowText}>{date.label} at {slot}</Text>
+          <Text style={styles.rowText}>{L.date_at(date.label, slot)}</Text>
         </View>
+        {remindersSet > 0 && (
+          <View style={[styles.row, { marginBottom: 0 }]}>
+            <Ionicons name="notifications-outline" size={16} color="#1D9E75" style={styles.rowIcon} />
+            <Text style={[styles.rowText, { color: '#1D9E75' }]}>
+              {remindersSet === 2 ? L.reminders_two : L.reminders_one}
+            </Text>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity style={styles.calendarButton} onPress={addToCalendar} disabled={addingToCalendar}>
         <Ionicons name="calendar-outline" size={18} color="#534AB7" style={{ marginRight: 8 }} />
-        <Text style={styles.calendarText}>
-          {addingToCalendar ? 'Adding...' : 'Add to calendar'}
-        </Text>
+        <Text style={styles.calendarText}>{addingToCalendar ? L.adding : L.add_to_calendar}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={s.button}
         onPress={() => navigation.getParent()?.navigate('Appointments') ?? navigation.popToTop()}
       >
-        <Text style={s.buttonText}>View my appointments</Text>
+        <Text style={s.buttonText}>{L.view_appointments}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.popToTop()}>
-        <Text style={s.linkText}>Back to salons</Text>
+        <Text style={s.linkText}>{L.back_to_salons}</Text>
       </TouchableOpacity>
     </View>
   );

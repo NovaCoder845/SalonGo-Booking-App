@@ -1,19 +1,55 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+// English and French texts of this screen
+const TEXTS = {
+  en: {
+    your_name: 'Your name',
+    owner: 'Salon owner',
+    customer: 'Customer',
+    bookings: 'Bookings',
+    account: 'Account',
+    app: 'App',
+    edit_profile: 'Edit profile',
+    notifications: 'Notifications',
+    payment: 'Payment methods',
+    help: 'Help & support',
+    about: 'About SalonGo',
+    logout: 'Log out',
+  },
+  fr: {
+    your_name: 'Votre nom',
+    owner: 'Propriétaire de salon',
+    customer: 'Client',
+    bookings: 'Réservations',
+    account: 'Compte',
+    app: 'Application',
+    edit_profile: 'Modifier le profil',
+    notifications: 'Notifications',
+    payment: 'Moyens de paiement',
+    help: 'Aide et assistance',
+    about: 'À propos de SalonGo',
+    logout: 'Se déconnecter',
+  },
+};
 
 const ACCOUNT_ROWS = [
-  { key: 'EditProfile', icon: 'person-outline', color: '#D85A30', label: 'Edit profile' },
-  { key: 'Notifications', icon: 'notifications-outline', color: '#534AB7', label: 'Notifications' },
-  { key: 'PaymentMethods', icon: 'card-outline', color: '#1D9E75', label: 'Payment methods' },
+  { key: 'EditProfile', icon: 'person-outline', color: '#D85A30', label: 'edit_profile' },
+  { key: 'Notifications', icon: 'notifications-outline', color: '#534AB7', label: 'notifications' },
+  { key: 'PaymentMethods', icon: 'card-outline', color: '#1D9E75', label: 'payment' },
 ];
 
 const APP_ROWS = [
-  { key: 'HelpSupport', icon: 'help-circle-outline', color: '#3B6FB5', label: 'Help & support' },
-  { key: 'About', icon: 'information-circle-outline', color: '#888780', label: 'About SalonGo' },
+  { key: 'HelpSupport', icon: 'help-circle-outline', color: '#3B6FB5', label: 'help' },
+  { key: 'About', icon: 'information-circle-outline', color: '#888780', label: 'about' },
 ];
 
 export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout, navigation }) {
+  const { i18n } = useTranslation();
+  const L = TEXTS[(i18n.language || 'en').startsWith('fr') ? 'fr' : 'en'];
+
   const initials = (user?.name || 'U')
     .split(' ')
     .map((w) => w[0])
@@ -21,7 +57,7 @@ export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout,
     .join('')
     .toUpperCase();
 
-  const roleLabel = role === 'owner' ? 'Salon owner' : 'Customer';
+  const roleLabel = role === 'owner' ? L.owner : L.customer;
 
   const handlePress = (row) => {
     navigation.navigate(row.key);
@@ -36,21 +72,25 @@ export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout,
         style={styles.header}
       >
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
+          {user?.photo ? (
+            <Image source={{ uri: user.photo }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{initials}</Text>
+          )}
         </View>
-        <Text style={styles.name}>{user?.name || 'Your name'}</Text>
+        <Text style={styles.name}>{user?.name || L.your_name}</Text>
         <View style={styles.roleBadge}>
           <Text style={styles.roleBadgeText}>{roleLabel}</Text>
         </View>
 
         <View style={styles.statsRow}>
           <Text style={styles.statValue}>{bookingsCount}</Text>
-          <Text style={styles.statLabel}>Bookings</Text>
+          <Text style={styles.statLabel}>{L.bookings}</Text>
         </View>
       </LinearGradient>
 
       <View style={styles.body}>
-        <Text style={styles.sectionLabel}>Account</Text>
+        <Text style={styles.sectionLabel}>{L.account}</Text>
         <View style={styles.group}>
           {ACCOUNT_ROWS.map((row, i) => (
             <TouchableOpacity
@@ -61,13 +101,13 @@ export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout,
               <View style={[styles.rowIcon, { backgroundColor: `${row.color}1A` }]}>
                 <Ionicons name={row.icon} size={18} color={row.color} />
               </View>
-              <Text style={styles.rowLabel}>{row.label}</Text>
+              <Text style={styles.rowLabel}>{L[row.label]}</Text>
               <Ionicons name="chevron-forward" size={18} color="#C9C7C0" />
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.sectionLabel}>App</Text>
+        <Text style={styles.sectionLabel}>{L.app}</Text>
         <View style={styles.group}>
           {APP_ROWS.map((row, i) => (
             <TouchableOpacity
@@ -78,7 +118,7 @@ export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout,
               <View style={[styles.rowIcon, { backgroundColor: `${row.color}1A` }]}>
                 <Ionicons name={row.icon} size={18} color={row.color} />
               </View>
-              <Text style={styles.rowLabel}>{row.label}</Text>
+              <Text style={styles.rowLabel}>{L[row.label]}</Text>
               <Ionicons name="chevron-forward" size={18} color="#C9C7C0" />
             </TouchableOpacity>
           ))}
@@ -86,7 +126,7 @@ export default function ProfileScreen({ user, role, bookingsCount = 0, onLogout,
 
         <TouchableOpacity style={styles.logout} onPress={onLogout}>
           <Ionicons name="log-out-outline" size={18} color="#D85A30" />
-          <Text style={styles.logoutText}>Log out</Text>
+          <Text style={styles.logoutText}>{L.logout}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -112,7 +152,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: '#fff',
+    overflow: 'hidden',
   },
+  avatarImage: { width: '100%', height: '100%' },
   avatarText: { color: '#fff', fontSize: 24, fontWeight: '700' },
   name: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 6 },
   roleBadge: {

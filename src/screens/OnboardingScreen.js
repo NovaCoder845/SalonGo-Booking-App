@@ -1,37 +1,61 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-    Dimensions,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    key: 'discover',
-    icon: 'search',
-    title: 'Find salons near you',
-    body: 'Browse top-rated salons and stylists in your neighborhood, filtered by service and distance.',
+const TEXTS = {
+  en: {
+    skip: 'Skip',
+    next: 'Next',
+    start: 'Get Started',
+    slides: [
+      {
+        title: 'Find salons near you',
+        body: 'Browse salons near you, sorted by distance, and see their services, photos and reviews.',
+      },
+      {
+        title: 'Book in a few taps',
+        body: "Pick a service, choose an open slot, and you're booked — no calls, no waiting.",
+      },
+      {
+        title: 'Never miss an appointment',
+        body: 'Get reminders before your visit and manage everything from one place.',
+      },
+    ],
   },
-  {
-    key: 'book',
-    icon: 'calendar',
-    title: 'Book in a few taps',
-    body: "Pick a service, choose an open slot, and you're booked — no calls, no waiting.",
+  fr: {
+    skip: 'Passer',
+    next: 'Suivant',
+    start: 'Commencer',
+    slides: [
+      {
+        title: 'Trouvez des salons près de vous',
+        body: 'Parcourez les salons proches, triés par distance, et découvrez leurs services, photos et avis.',
+      },
+      {
+        title: 'Réservez en quelques touches',
+        body: 'Choisissez un service, un créneau libre, et c’est réservé — sans appel, sans attente.',
+      },
+      {
+        title: 'Ne ratez plus un rendez-vous',
+        body: 'Recevez des rappels avant votre visite et gérez tout au même endroit.',
+      },
+    ],
   },
-  {
-    key: 'remind',
-    icon: 'notifications',
-    title: 'Never miss an appointment',
-    body: 'Get reminders before your visit and manage everything from one place.',
-  },
-];
+};
+
+// The icons stay the same for every language
+const SLIDE_ICONS = ['search', 'calendar', 'notifications'];
 
 function HeroArt({ icon }) {
   return (
@@ -54,6 +78,10 @@ function HeroArt({ icon }) {
 }
 
 export default function OnboardingScreen({ onDone }) {
+  const { i18n } = useTranslation();
+  const L = TEXTS[(i18n.language || 'en').startsWith('fr') ? 'fr' : 'en'];
+  const SLIDES = L.slides.map((slide, i) => ({ key: String(i), icon: SLIDE_ICONS[i], ...slide }));
+
   const [index, setIndex] = useState(0);
   const listRef = useRef(null);
 
@@ -75,7 +103,7 @@ export default function OnboardingScreen({ onDone }) {
   return (
     <View style={styles.screen}>
       <TouchableOpacity style={styles.skip} onPress={onDone}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{L.skip}</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -105,7 +133,7 @@ export default function OnboardingScreen({ onDone }) {
       </View>
 
       <TouchableOpacity style={styles.cta} onPress={next}>
-        <Text style={styles.ctaText}>{isLast ? 'Get Started' : 'Next'}</Text>
+        <Text style={styles.ctaText}>{isLast ? L.start : L.next}</Text>
       </TouchableOpacity>
     </View>
   );

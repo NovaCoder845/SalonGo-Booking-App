@@ -4,18 +4,43 @@
     "slug": "SalonGo",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/images/salongo-icon.png",
     "userInterfaceStyle": "automatic",
+    "plugins": [
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "SalonGo adds your appointments to your calendar."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SalonGo uses your location to show salons near you."
+        }
+      ],
+      "expo-notifications"
+    ],
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/salongo-adaptive-foreground.png",
+        "monochromeImage": "./assets/images/salongo-adaptive-monochrome.png",
+        "backgroundColor": "#000000"
+      },
       "permissions": [
         "CAMERA",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR"
       ],
       "package": "com.anonymous.SalonGo"
     },
     "ios": {
       "infoPlist": {
         "NSCameraUsageDescription": "SalonGo uses your camera to add profile and salon photos.",
-        "NSLocationWhenInUseUsageDescription": "SalonGo uses your location to show salons near you."
+        "NSLocationWhenInUseUsageDescription": "SalonGo uses your location to show salons near you.",
+        "NSCalendarsUsageDescription": "SalonGo adds your appointments to your calendar."
       }
     }
   }
